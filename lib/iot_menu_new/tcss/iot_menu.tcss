@@ -23,9 +23,27 @@ Screen {
         height: 100%;
     }
 
+    #checklist {
+        margin-top: 5;
+    }
+
+    #file_editor {
+        height: 1fr;
+        border: solid $secondary;
+    }
+
+    #editor_path {
+        padding: 1;
+    }
+
+    #editor_status {
+        height: 2;
+        padding: 1;
+    }
+
     Button {
-    width: 100%;
-    height: auto;
+        width: 100%;
+        height: auto;
 
 
 }

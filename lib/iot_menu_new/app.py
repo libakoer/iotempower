@@ -1,6 +1,7 @@
 # app.py
 from __future__ import annotations
-
+import os
+import signal
 import asyncio
 from collections import deque
 from pathlib import Path
@@ -36,7 +37,8 @@ from screens.system_template_screen import SystemTemplate
 from screens.upgrade_screen import UpgradeIot
 from screens.web_starter_screen import WebStarter
 from screens.loading_screen import LoadingScreen  # kui kasutusel
-
+from screens.file_editor_screen import FileEditorScreen
+from menus.checklist import Checklist
 from menus.basic_menu import BasicMenu
 from menus.advanced_menu import AdvancedMenu
 from menus.wifi_menu import WifiMenu
@@ -76,6 +78,7 @@ class IotMenu(App[None]):
         self.web_starter: asyncio.subprocess.Process | None = None
         self.web_stream_task: asyncio.Task | None = None
         self.web_log_buffer: deque[str] = deque(maxlen=5000)  # keep last N lines
+        self._pending_directory: Path | None = None
 
         # SCREENS - create factories so `current_path` can be passed when needed
         self.SCREENS = {
@@ -95,7 +98,7 @@ class IotMenu(App[None]):
     # ---------------------------
     # Load log history at startup
     # ---------------------------
-    def load_log_history(self, max_lines: int = 1000) -> None:
+    def load_log_history(self, max_lines: int = 100) -> None:
         """Load previous log lines from the file into the buffer (last N lines)."""
         try:
             if LOG_PATH.exists():
@@ -120,7 +123,7 @@ class IotMenu(App[None]):
             "web_starter",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
-            # cwd=str(self.current_path),  # vajadusel aktiveeri
+            start_new_session=True,  # creates separate process group
         )
 
         # Log "launched" into buffer and file + send event to screens
@@ -140,28 +143,34 @@ class IotMenu(App[None]):
         self.web_stream_task = asyncio.create_task(_stream())
 
     async def stop_backend(self) -> None:
-        """Stop the stream and process. Use only from Stop button or on app exit."""
-        # 1) stop reading the stream
+        """Stop web_starter and all child processes."""
+
         if self.web_stream_task and not self.web_stream_task.done():
             self.web_stream_task.cancel()
             try:
                 await self.web_stream_task
             except asyncio.CancelledError:
                 pass
+
         self.web_stream_task = None
 
-        # 2) end the process
         proc = self.web_starter
-        if proc and proc.returncode is None:
-            proc.terminate()
-            try:
-                await asyncio.wait_for(proc.wait(), timeout=3)
-            except asyncio.TimeoutError:
-                proc.kill()
-                await proc.wait()
 
-            # record stop both in file and buffer
-            self._append_log_line("Web starter stopped", emit=True)
+        if proc and proc.returncode is None:
+            try:
+                # Kill entire process group
+                os.killpg(proc.pid, signal.SIGTERM)
+
+                try:
+                    await asyncio.wait_for(proc.wait(), timeout=5)
+                except asyncio.TimeoutError:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                    await proc.wait()
+
+                self._append_log_line("Web starter stopped", emit=True)
+
+            except ProcessLookupError:
+                pass
 
         self.web_starter = None
 
@@ -193,7 +202,7 @@ class IotMenu(App[None]):
             with Container(id="left_panel"):
                 yield Static(f"Current Path: {self.current_path}", id="path_display")
                 yield DirectoryTree(self.current_path, id="dir_tree")
-            yield Container(BasicMenu(), id="right_panel")
+            yield Container(BasicMenu(), Checklist(id="checklist"), id="right_panel")
         yield Footer()
 
     # ---------------------------
@@ -229,8 +238,9 @@ class IotMenu(App[None]):
     @on(Button.Pressed, "#back")
     def action_remove_menu_and_add_Basic(self) -> None:
         new_basic_menu = BasicMenu()
+        new_checklist = Checklist(id="checklist")
         self.query_one("#right_panel").remove_children()
-        self.query_one("#right_panel").mount(new_basic_menu)
+        self.query_one("#right_panel").mount(new_basic_menu, new_checklist)
 
     @on(Button.Pressed, "#wifi")
     def action_remove_Basic_menu_and_add_wifi(self) -> None:
@@ -272,18 +282,44 @@ class IotMenu(App[None]):
         self.path_display = self.query_one("#path_display", Static)
         self.set_focus(self.dir_tree)
 
+    def on_mouse_down(self, event: events.MouseDown) -> None:
+        # Mouse button 2 is the middle button / scroll wheel click.
+        if event.button == 2:
+            self.action_up()
+            event.stop()
+
     def on_key(self, event: events.Key) -> None:
         if event.key == "enter" and self.focused is self.dir_tree:
             node = self.dir_tree.cursor_node
             entry = node.data
             path = Path(entry.path)
             if path.is_dir():
-                if node.is_expanded:
+                if not node.is_expanded:
+                    node.expand()
+                else:
                     self._load_path(path)
                 event.stop()
             else:
-                self.log(f"Selected file: {path}")
+                self.push_screen(FileEditorScreen(path))
                 event.stop()
+
+    @on(DirectoryTree.FileSelected)
+    def file_selected(self, event: DirectoryTree.FileSelected) -> None:
+        self.push_screen(FileEditorScreen(Path(event.path)))
+
+    @on(DirectoryTree.DirectorySelected)
+    def directory_selected(self, event: DirectoryTree.DirectorySelected) -> None:
+        node = event.node
+        path = Path(event.path)
+
+        if self._pending_directory == path:
+            self._pending_directory = None
+            self._load_path(path)
+            return
+
+        self._pending_directory = path
+        if not node.is_expanded:
+            node.expand()
 
     def action_up(self) -> None:
         parent = self.current_path.parent
