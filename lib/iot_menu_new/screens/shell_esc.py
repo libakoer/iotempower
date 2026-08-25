@@ -19,81 +19,147 @@ class ShellScreen(Screen):
         yield Button("Go back", id="pop")
 
     def open_shell(self) -> None:
-        """Open a terminal in self.current_path."""
-
-        system = platform.system()
-        working_directory = self.current_path.expanduser().resolve()
+        """Open a new terminal window in the selected directory."""
 
         try:
+            working_directory = self.current_path.expanduser().resolve()
+
             if not working_directory.is_dir():
                 self.notify(f"Directory does not exist: {working_directory}")
                 return
 
+            system = platform.system()
+
+            # Windows
             if system == "Windows":
-                # Prefer Windows Terminal
                 try:
                     subprocess.Popen(
                         ["wt.exe", "-d", str(working_directory)],
                         cwd=str(working_directory),
+                        start_new_session=True,
                     )
                     return
                 except FileNotFoundError:
                     pass
 
-                # Fallback to Command Prompt
                 subprocess.Popen(
                     ["cmd.exe", "/K"],
                     cwd=str(working_directory),
+                    start_new_session=True,
                 )
+                return
 
+            # Linux
             elif system == "Linux":
-                # In WSL, the Windows Terminal may ignore the Linux process cwd.
-                # Start a WSL tab with the directory passed explicitly instead.
-                if os.environ.get("WSL_INTEROP") and shutil.which("wt.exe"):
+
+                # WSL support
+                if os.environ.get("WSL_INTEROP"):
+                    try:
+                        subprocess.Popen(
+                            [
+                                "wt.exe",
+                                "wsl.exe",
+                                "--cd",
+                                str(working_directory),
+                            ],
+                            start_new_session=True,
+                        )
+                        return
+                    except Exception:
+                        pass
+
+                # Ubuntu 25+ default terminal
+                if shutil.which("ptyxis"):
                     subprocess.Popen(
-                        ["wt.exe", "wsl.exe", "--cd", str(working_directory)],
+                        [
+                            "ptyxis",
+                            "--new-window",
+                        ],
                         cwd=str(working_directory),
+                        start_new_session=True,
                     )
                     return
 
-                terminal_commands = (
-                    ("gnome-terminal", ["gnome-terminal", "--working-directory", str(working_directory)]),
-                    ("konsole", ["konsole", "--workdir", str(working_directory)]),
-                    ("xfce4-terminal", ["xfce4-terminal", "--working-directory", str(working_directory)]),
-                    ("mate-terminal", ["mate-terminal", "--working-directory", str(working_directory)]),
-                    ("x-terminal-emulator", ["x-terminal-emulator"]),
-                    ("tilix", ["tilix", "--working-directory", str(working_directory)]),
-                    ("kitty", ["kitty"]),
-                    ("alacritty", ["alacritty"]),
-                    ("xterm", ["xterm"]),
-                )
-
-                for terminal, command in terminal_commands:
-                    if shutil.which(terminal):
-                        subprocess.Popen(command, cwd=str(working_directory))
-                        return
-
-                if shutil.which("bash"):
+                if shutil.which("gnome-terminal"):
                     subprocess.Popen(
-                        ["bash"],
+                        [
+                            "gnome-terminal",
+                            "--working-directory",
+                            str(working_directory),
+                        ],
+                        start_new_session=True,
+                    )
+                    return
+
+                if shutil.which("konsole"):
+                    subprocess.Popen(
+                        [
+                            "konsole",
+                            "--workdir",
+                            str(working_directory),
+                        ],
+                        start_new_session=True,
+                    )
+                    return
+
+                if shutil.which("xfce4-terminal"):
+                    subprocess.Popen(
+                        [
+                            "xfce4-terminal",
+                            "--working-directory",
+                            str(working_directory),
+                        ],
+                        start_new_session=True,
+                    )
+                    return
+
+                if shutil.which("mate-terminal"):
+                    subprocess.Popen(
+                        [
+                            "mate-terminal",
+                            "--working-directory",
+                            str(working_directory),
+                        ],
+                        start_new_session=True,
+                    )
+                    return
+
+                if shutil.which("tilix"):
+                    subprocess.Popen(
+                        [
+                            "tilix",
+                            "--working-directory",
+                            str(working_directory),
+                        ],
+                        start_new_session=True,
+                    )
+                    return
+
+                if shutil.which("xterm"):
+                    subprocess.Popen(
+                        ["xterm"],
                         cwd=str(working_directory),
+                        start_new_session=True,
                     )
                     return
 
                 self.notify("No terminal emulator found.")
+                return
 
+            # macOS
             elif system == "Darwin":
                 subprocess.Popen(
                     [
                         "open",
                         "-a",
                         "Terminal",
-                        str(self.current_path),
-                    ]
+                        str(working_directory),
+                    ],
+                    start_new_session=True,
                 )
+                return
 
-            else:
-                self.notify(f"Unsupported platform: {system}")
+            self.notify(f"Unsupported platform: {system}")
 
         except Exception as e:
             self.notify(f"Failed to open terminal: {e}")
