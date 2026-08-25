@@ -14,9 +14,22 @@ Screen {
         width: 25%;
         min-width: 20;
         dock: right;
+        height: 100%;
+        layout: vertical;
         background: $surface;
         padding: 1;
         border: solid $secondary;
+    }
+
+    #menu_panel {
+        width: 100%;
+        height: 2fr;
+    }
+
+    #menu_panel > BasicMenu,
+    #menu_panel > AdvancedMenu,
+    #menu_panel > WifiMenu {
+        height: 1fr;
     }
 
     #menu_scroll {
@@ -24,7 +37,8 @@ Screen {
     }
 
     #checklist {
-        margin-top: 5;
+        height: 1fr;
+        margin-top: 1;
     }
 
     #file_editor {

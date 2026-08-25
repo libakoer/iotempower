@@ -14,7 +14,7 @@ class DeployScreen(Screen):
             self.current_path = Path(current_path or Path.cwd())
         def compose(self) -> ComposeResult:
             yield Header()
-            yield Label("You are baout to deploy from the following path:")
+            yield Label("You are about to deploy from the following path:")
             yield Label(f"{self.current_path}")
             yield Label("Are you sure?")
             yield Button("Yes, run deploy", id="deploy_logic")
