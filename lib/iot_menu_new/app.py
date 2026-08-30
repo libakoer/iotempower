@@ -251,7 +251,7 @@ class IotMenu(App[None]):
         menu_panel.mount(new_advanced_menu)
 
     @on(Button.Pressed, "#mqtt_menu")
-    def action_remove_Basic_menu_and_add_Advanced(self) -> None:
+    def action_remove_Basic_menu_and_add_mqtt_menu(self) -> None:
         new_mqtt_menu = MqttMenu()
         menu_panel = self.query_one("#menu_panel")
         menu_panel.remove_children()

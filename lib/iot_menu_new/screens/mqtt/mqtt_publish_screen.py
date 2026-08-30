@@ -5,6 +5,7 @@ from textual.widgets import Button, Input
 from textual.app import ComposeResult
 from messages.deploy_success_message import DeploySuccess
 from screens.loading_screen import LoadingScreen
+from script_activation_logic.mqtt.mqtt_publish_logic import publish_message
 
 class MqttPublishScreen(Screen):
     def __init__(self,openwrt: bool, current_path: str = None, **kwargs):
@@ -14,7 +15,7 @@ class MqttPublishScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Input(placeholder="Please insert the topic:", id="topic")
         yield Input(placeholder="Please insert the message:", id="message")
-        yield Input(placeholder="The MQTT IP:", id="mqtt_ip", value="192.168.14.1")
+        yield Input(placeholder="The MQTT IP:", id="mqtt_ip", value="localhost")
         yield Button("Submit", id="mqtt_publish_message")
         yield Button("Go back", id="pop")
 
@@ -24,5 +25,6 @@ class MqttPublishScreen(Screen):
         topic = self.query_one("#topic", Input).value
         message = self.query_one("#message", Input).value
         mqtt_ip= self.query_one("#mqtt_ip", Input).value
+        publish_message(topic, message, mqtt_ip)
         self.post_message(DeploySuccess(message + " has been published to topic: " + topic ))
 
