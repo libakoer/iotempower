@@ -4,10 +4,10 @@ from textual.screen import Screen
 from textual.app import ComposeResult
 from pathlib import Path
 from messages.deploy_success_message import DeploySuccess
-from textual import events, on
-from script_activation_logic.deploy_script import deploy_script
+from textual import on
+from script_activation_logic.basic.deploy_script import deploy_script
 from messages.deploy_failed_message import DeployFailed
-from screens.loading_screen import LoadingScreen
+from screens.status.loading_screen import LoadingScreen
 class DeployScreen(Screen):
         def __init__(self, current_path: str = None, **kwargs):
             super().__init__(**kwargs)

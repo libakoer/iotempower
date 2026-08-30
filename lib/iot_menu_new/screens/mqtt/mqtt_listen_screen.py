@@ -4,7 +4,7 @@ from pathlib import Path
 from textual.widgets import Button, Input
 from textual.app import ComposeResult
 from messages.deploy_success_message import DeploySuccess
-from screens.loading_screen import LoadingScreen
+from screens.status.loading_screen import LoadingScreen
 from script_activation_logic.mqtt.mqtt_listen_logic import open_listener
 
 class MqttListenScreen(Screen):

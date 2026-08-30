@@ -8,8 +8,6 @@ from pathlib import Path
 import sys
 from pathlib import Path as _Path
 
-from screens.mqtt import mqtt_listen_screen
-
 # Ensure `${workspace}/lib` is on `sys.path` so imports like
 # `import ap_configurator` resolve regardless of current working directory
 # (works when running the app from the repo root, from other folders, or
@@ -24,22 +22,21 @@ from textual import events, on
 from textual.containers import Container, Horizontal
 from textual.widgets import DirectoryTree, Header, Footer, Static, Button
 
-from screens.sucess_screen import Success
-from screens.deploy_screen import DeployScreen
-from screens.new_folder_screen import NewFolder
-from screens.adopt_screen import AdoptScreen
-from screens.wifi_setup_system_conf_screen import WifiSetupSystemconf
-from screens.open_wrt_setup_screen import OpenwrtSetup
-from screens.failed_screen import Failed
-from screens.open_wrt_router_screen import OpenWrtRouterIp
-from screens.pre_flash_wemos_d1_mini import WemosPre
-from screens.initialize_serial import InitializeSerial
-from screens.system_template_screen import SystemTemplate
-from screens.upgrade_screen import UpgradeIot
-from screens.web_starter_screen import WebStarter
-from screens.loading_screen import LoadingScreen  # kui kasutusel
+from screens.status.sucess_screen import Success
+from screens.basic.deploy_screen import DeployScreen
+from screens.advanced.new_folder_screen import NewFolder
+from screens.basic.adopt_screen import AdoptScreen
+from screens.wifi_setup.wifi_setup_system_conf_screen import WifiSetupSystemconf
+from screens.wifi_setup.open_wrt_setup_screen import OpenwrtSetup
+from screens.status.failed_screen import Failed
+from screens.wifi_setup.open_wrt_router_screen import OpenWrtRouterIp
+from screens.advanced.pre_flash_wemos_d1_mini import WemosPre
+from screens.advanced.initialize_serial import InitializeSerial
+from screens.advanced.system_template_screen import SystemTemplate
+from screens.advanced.upgrade_screen import UpgradeIot
+from screens.basic.web_starter_screen import WebStarter
 from screens.file_editor_screen import FileEditorScreen
-from screens.shell_esc import ShellScreen
+from screens.advanced.shell_esc import ShellScreen
 from screens.mqtt.mqtt_listen_screen import MqttListenScreen
 from screens.mqtt.mqtt_publish_screen import MqttPublishScreen
 
@@ -54,7 +51,7 @@ from messages.deploy_success_message import DeploySuccess
 from messages.deploy_failed_message import DeployFailed
 from messages.web_output import WebOutput  # <-- message carrier for log lines
 
-from script_activation_logic.find_router_ip_logic import router_ip
+from script_activation_logic.wifi.find_router_ip_logic import router_ip
 
 
 
@@ -102,7 +99,7 @@ class IotMenu(App[None]):
             "mqtt_menu": lambda: MqttMenu(),
             "mqtt_listen": lambda: MqttListenScreen(self.current_path),
             "mqtt_publish": lambda: MqttPublishScreen(self.current_path),
-            "ap_configurator": lambda: __import__("iot_menu_new.screens.ap_configurator_screen", fromlist=["APConfiguratorScreen"]).APConfiguratorScreen(),
+            "ap_configurator": lambda: __import__("iot_menu_new.screens.basic.ap_configurator_screen", fromlist=["APConfiguratorScreen"]).APConfiguratorScreen(),
         }
 
     # ---------------------------

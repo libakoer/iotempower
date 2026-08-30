@@ -3,7 +3,7 @@ from textual import  on
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import Button
-from script_activation_logic.open_shell_logic import  open_shell_logic
+from script_activation_logic.advanced.open_shell_logic import  open_shell_logic
 
 class ShellScreen(Screen):
     def __init__(self, current_path: str | None = None, **kwargs):

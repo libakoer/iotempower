@@ -87,13 +87,13 @@ Each screen corresponds to a major workflow and invokes script logic:
 
 | Screen | File | Bash Script | Python Logic |
 |--------|------|-------------|--------------|
-| DeployScreen | `screens/deploy_screen.py` | `bin/deploy` | `script_activation_logic/deploy_script.py` |
-| AdoptScreen | `screens/adopt_screen.py` | `bin/adopt` | `script_activation_logic/adopt_script.py` |
-| WifiSetupSystemconf | `screens/wifi_setup_system_conf_screen.py` | `bin/setup_systemconf` | `script_activation_logic/wifi_setup_systemconf_script.py` |
-| OpenwrtSetup | `screens/open_wrt_setup_screen.py` | `bin/wifi_openwrt_setup` | `script_activation_logic/open_wrt_setup_script.py` |
-| SystemTemplate | `screens/system_template_screen.py` | `bin/create_system_template` | `script_activation_logic/create_system_logic.py` |
-| WebStarter | `screens/web_starter_screen.py` | `bin/web_starter` | Managed by app.py |
-| APConfigurator | `screens/ap_configurator_screen.py` | N/A | `lib/ap_configurator/*` |
+| DeployScreen | `screens/basic/deploy_screen.py` | `bin/deploy` | `script_activation_logic/basic/deploy_script.py` |
+| AdoptScreen | `screens/basic/adopt_screen.py` | `bin/adopt` | `script_activation_logic/basic/adopt_script.py` |
+| WifiSetupSystemconf | `screens/wifi_setup/wifi_setup_system_conf_screen.py` | `bin/setup_systemconf` | `script_activation_logic/wifi/wifi_setup_systemconf_script.py` |
+| OpenwrtSetup | `screens/wifi_setup/open_wrt_setup_screen.py` | `bin/wifi_openwrt_setup` | `script_activation_logic/wifi/open_wrt_setup_script.py` |
+| SystemTemplate | `screens/advanced/system_template_screen.py` | `bin/create_system_template` | `script_activation_logic/advanced/create_system_logic.py` |
+| WebStarter | `screens/basic/web_starter_screen.py` | `bin/web_starter` | Managed by app.py |
+| APConfigurator | `screens/basic/ap_configurator_screen.py` | N/A | `lib/ap_configurator/*` |
 
 ---
 
