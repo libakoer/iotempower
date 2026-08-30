@@ -145,7 +145,7 @@ The app maintains a real-time log of `web_starter` output:
    - Emits `WebOutput` message to notify listening screens
 
 3. **Persistent Log**:
-   - Lines also written to `web_starter.log` file
+   - Lines also written to `logs/web_starter.log` file
    - Re-loaded on app startup
 
 4. **Display**:

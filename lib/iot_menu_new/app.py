@@ -56,7 +56,7 @@ from script_activation_logic.wifi.find_router_ip_logic import router_ip
 
 
 # --- Location of the persistent log file for the web starter
-LOG_PATH = Path("web_starter.log")
+LOG_PATH = Path("logs/web_starter.log")
 
 
 class IotMenu(App[None]):
