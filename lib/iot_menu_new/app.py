@@ -8,6 +8,8 @@ from pathlib import Path
 import sys
 from pathlib import Path as _Path
 
+from screens.mqtt import mqtt_listen_screen
+
 # Ensure `${workspace}/lib` is on `sys.path` so imports like
 # `import ap_configurator` resolve regardless of current working directory
 # (works when running the app from the repo root, from other folders, or
@@ -16,7 +18,6 @@ _REPO_LIB = _Path(__file__).resolve().parents[1]
 if str(_REPO_LIB) not in sys.path:
     sys.path.insert(0, str(_REPO_LIB))
 
-import ap_configurator
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual import events, on
@@ -39,11 +40,14 @@ from screens.web_starter_screen import WebStarter
 from screens.loading_screen import LoadingScreen  # kui kasutusel
 from screens.file_editor_screen import FileEditorScreen
 from screens.shell_esc import ShellScreen
+from screens.mqtt.mqtt_listen_screen import MqttListenScreen
+from screens.mqtt.mqtt_publish_screen import MqttPublishScreen
 
 from menus.checklist import Checklist
 from menus.basic_menu import BasicMenu
 from menus.advanced_menu import AdvancedMenu
 from menus.wifi_menu import WifiMenu
+from menus.mqtt_menu import MqttMenu
 
 from messages.refresh_screen import Refresh
 from messages.deploy_success_message import DeploySuccess
@@ -95,6 +99,9 @@ class IotMenu(App[None]):
             "new_system_template": lambda: SystemTemplate(self.current_path),
             "upgrade": lambda: UpgradeIot(),
             "web_starter": lambda: WebStarter(),
+            "mqtt_menu": lambda: MqttMenu(),
+            "mqtt_listen": lambda: MqttListenScreen(self.current_path),
+            "mqtt_publish": lambda: MqttPublishScreen(self.current_path),
             "ap_configurator": lambda: __import__("iot_menu_new.screens.ap_configurator_screen", fromlist=["APConfiguratorScreen"]).APConfiguratorScreen(),
         }
 
@@ -118,6 +125,8 @@ class IotMenu(App[None]):
     # ---------------------------
     async def start_web_starter(self) -> None:
         """Start the web starter (if not already running) and stream stdout at the App level."""
+        if LOG_PATH.exists():
+            open(LOG_PATH.absolute(), "w").close()
         if self.web_starter is not None and self.web_starter.returncode is None:
             return  # already running
 
@@ -228,7 +237,7 @@ class IotMenu(App[None]):
         self.pop_screen()
         self.push_screen(Failed(error.error, error.code))
 
-    @on(Button.Pressed, "#deploy,#adopt,#folder,#wifi_conf,#openwrt,#wemos,#initialize,#new_system_template,#upgrade,#web_starter,#ap_configurator,#shell_escape")
+    @on(Button.Pressed, "#deploy,#adopt,#folder,#wifi_conf,#openwrt,#wemos,#initialize,#new_system_template,#upgrade,#web_starter,#ap_configurator,#shell_escape,#mqtt_listen,#mqtt_publish")
     def action_deployment_screen(self, event: Button.Pressed) -> None:
         screen_factory = self.SCREENS.get(event.button.id)
         if screen_factory:
@@ -240,6 +249,15 @@ class IotMenu(App[None]):
         menu_panel = self.query_one("#menu_panel")
         menu_panel.remove_children()
         menu_panel.mount(new_advanced_menu)
+
+    @on(Button.Pressed, "#mqtt_menu")
+    def action_remove_Basic_menu_and_add_Advanced(self) -> None:
+        new_mqtt_menu = MqttMenu()
+        menu_panel = self.query_one("#menu_panel")
+        menu_panel.remove_children()
+        menu_panel.mount(
+            new_mqtt_menu
+        )
 
     @on(Button.Pressed, "#back")
     def action_remove_menu_and_add_Basic(self) -> None:
